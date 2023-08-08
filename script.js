@@ -124,6 +124,12 @@ function configureCallFrame() {
                 enableGameJoin(callFrame);
             }
         })
+        .on("participant-joined", (e) => {
+            const isHost = !!e.participant.userData?.isKahootHost;
+            if (isHost) {
+                enableGameJoin(callFrame);
+            }
+        })
 
     return callFrame;
 }
