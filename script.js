@@ -110,6 +110,13 @@ function configureCallFrame() {
                 return;
             }
         })
+        .on('participant-left', (e) => {
+            const participantDetails = e.participant;
+            const participantLeavingHasIsKahootHost = participantDetails.userData && 'isKahootHost' in participantDetails.userData;
+            if (participantLeavingHasIsKahootHost && !!participantDetails.userData.isKahootHost) {
+                enableKahootHostIntegration(callFrame);
+            }
+        })
 
     return callFrame;
 }
