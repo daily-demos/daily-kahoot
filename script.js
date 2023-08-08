@@ -96,6 +96,18 @@ function configureCallFrame() {
                 if (!isLocalParticipantRunningTheGame) {
                     disableKahootHostIntegration(callFrame);
                 }
+
+                return;
+            }
+
+            const isLocalParticipantUpdated = localParticipant.session_id === e.participant.session_id;
+            const updatedParticipantHasIsKahootHost = e.participant.userData && 'isKahootHost' in e.participant.userData;
+            if (!isLocalParticipantUpdated && updatedParticipantHasIsKahootHost) {
+                const wasUpdateToSetKahootHostStateToFalse = !e.participant.userData?.isKahootHost;
+                if (wasUpdateToSetKahootHostStateToFalse) {
+                    enableKahootHostIntegration(callFrame);
+                }
+                return;
             }
         })
 
