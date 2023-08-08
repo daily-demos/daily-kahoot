@@ -105,6 +105,7 @@ function configureCallFrame() {
             if (!isLocalParticipantUpdated && updatedParticipantHasIsKahootHost) {
                 const wasUpdateToSetKahootHostStateToFalse = !e.participant.userData?.isKahootHost;
                 if (wasUpdateToSetKahootHostStateToFalse) {
+                    disableGameJoin(callFrame);
                     enableKahootHostIntegration(callFrame);
                 }
                 return;
@@ -212,6 +213,11 @@ function enableGameJoin(callFrame) {
     callFrame.startCustomIntegrations(["kahootPlayer"]);
 }
 
+function disableGameJoin(callFrame) {
+    callFrame.stopCustomIntegrations(["kahootPlayer"]);
+    disableKahootPlayerIntegration(callFrame);
+}
+
 function enableKahootPlayerIntegration(callFrame) {
     const url = "https://kahoot.it";
     const integration = {
@@ -224,4 +230,13 @@ function enableKahootPlayerIntegration(callFrame) {
     const integrations = callFrame.customIntegrations();
     integrations.kahootPlayer = integration;
     callFrame.setCustomIntegrations(integrations);
+}
+
+function disableKahootPlayerIntegration(callFrame) {
+    const integrations = callFrame.customIntegrations();
+    if ("kahootPlayer" in integrations) {
+        callFrame.stopCustomIntegrations(["kahootPlayer"]);
+        delete integrations.kahootPlayer;
+        callFrame.setCustomIntegrations(integrations);
+    }
 }
