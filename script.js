@@ -117,6 +117,13 @@ function configureCallFrame() {
                 enableKahootHostIntegration(callFrame);
             }
         })
+        .on('app-message', (e) => {
+            const data = e.data;
+
+            if (!!data.gameStarted) {
+                enableGameJoin(callFrame);
+            }
+        })
 
     return callFrame;
 }
@@ -182,6 +189,8 @@ function updateGameHostState(callFrame, isStartingGame) {
     callFrame.setUserData({
         isKahootHost: isStartingGame,
     });
+
+    callFrame.sendAppMessage({ gameStarted: isStartingGame }, "*");
 }
 
 function checkIfKahootGameIsOngoing(callFrame) {
@@ -190,4 +199,23 @@ function checkIfKahootGameIsOngoing(callFrame) {
     return participants.some(
         (participant) => !!participant.userData?.isKahootHost
     );
+}
+
+function enableGameJoin(callFrame) {
+    enableKahootPlayerIntegration(callFrame);
+    callFrame.startCustomIntegrations(["kahootPlayer"]);
+}
+
+function enableKahootPlayerIntegration(callFrame) {
+    const url = "https://kahoot.it";
+    const integration = {
+        location: "main",
+        shared: false,
+        src: url,
+        label: "Play Kahoot",
+        sandbox: "allow-same-origin allow-scripts",
+    };
+    const integrations = callFrame.customIntegrations();
+    integrations.kahootPlayer = integration;
+    callFrame.setCustomIntegrations(integrations);
 }
