@@ -1,0 +1,65 @@
+:root {
+    --light-grey: #f7f9fa;
+    --white: #ffffff;
+    --grey: #c8d1dc;
+    --teal: #1bebb9;
+}
+
+html {
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+*,
+*:before,
+*:after {
+    box-sizing: inherit;
+}
+
+body {
+    font-family: sans-serif;
+    line-height: 1.5;
+    background-color: var(--light-grey);
+}
+
+.app {
+    height: 100vh;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    justify-items: center;
+    align-content: center;
+    text-align: center
+}
+
+.app h1 {
+    text-align: center;
+    flex-basis: 100%;
+}
+
+.app .welcome-screen {
+    flex-basis: 100%;
+    height: 400px;
+}
+
+.app .welcome-screen .welcome-screen-button {
+    background-color: var(--teal);
+    font-weight: bolder;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.app .widget-container {
+    flex-basis: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+.app .welcome-screen.hidden,
+.app .widget-container.hidden {
+    display: none;
+    flex: 0
+}
