@@ -61,7 +61,17 @@ function configureCallFrame() {
             leaveCall(callFrame);
         })
         .on("custom-button-click", (e) => {
+            const localParticipant = callFrame.participants().local;
+
             if (e.button_id === "kahootHost") {
+                const isCurrentHost = !!localParticipant.userData?.isKahootHost;
+                if (isCurrentHost) {
+                    callFrame.stopCustomIntegrations(["kahootHost"]);
+                    updateKahootHostButton(callFrame, true);
+                    updateGameHostState(callFrame, false);
+                    return;
+                }
+
                 callFrame.startCustomIntegrations(["kahootHost"]);
                 updateGameHostState(callFrame, true);
                 updateKahootHostButton(callFrame, false);
