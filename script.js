@@ -79,24 +79,23 @@ function leaveCall(callFrame) {
 function enableKahootHostIntegration(callFrame) {
     const url = "https://play.kahoot.it/v2/?quizId=c990a754-237c-4d1a-bfe5-c580895d7f5f";
     const integration = {
-      controlledBy: [],
-      location: "main",
-      shared: true,
-      src: url,
-      label: "Kahoot Host",
-      sandbox: "allow-same-origin allow-scripts allow-forms allow-popups",
+        controlledBy: [],
+        location: "main",
+        shared: true,
+        src: url,
+        label: "Kahoot Host",
+        sandbox: "allow-same-origin allow-scripts allow-forms allow-popups",
     };
-  
+
     const integrations = callFrame.customIntegrations();
     integrations.kahootHost = integration;
     callFrame.setCustomIntegrations(integrations);
     callFrame.updateCustomTrayButtons({
-      kahootHost: {
-        iconPath:
-          "https://cdn.glitch.global/37a36d43-2f57-4d0f-942b-c355917cd97c/kahootIcon.png?v=1687582184705",
-        label: "Start Kahoot Game",
-        tooltip: "Start Kahoot Game",
-      },
+        kahootHost: {
+            iconPath:
+                "https://cdn.glitch.global/37a36d43-2f57-4d0f-942b-c355917cd97c/kahootIcon.png?v=1687582184705",
+            label: "Start Kahoot Game",
+            tooltip: "Start Kahoot Game",
+        },
     });
-  }
-  
+}
