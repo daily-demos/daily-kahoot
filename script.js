@@ -115,6 +115,7 @@ function configureCallFrame() {
             const participantDetails = e.participant;
             const participantLeavingHasIsKahootHost = participantDetails.userData && 'isKahootHost' in participantDetails.userData;
             if (participantLeavingHasIsKahootHost && !!participantDetails.userData.isKahootHost) {
+                disableGameJoin(callFrame);
                 enableKahootHostIntegration(callFrame);
             }
         })
