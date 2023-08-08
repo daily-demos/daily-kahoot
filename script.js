@@ -80,6 +80,24 @@ function configureCallFrame() {
                 }
             }
         })
+        .on("participant-updated", (e) => {
+            const isGameRunning = checkIfKahootGameIsOngoing(callFrame);
+            const localParticipant = callFrame.participants().local;
+            if (isGameRunning) {
+                const allParticipants = callFrame.participants();
+                const participants = Object.values(allParticipants);
+                const participantRunningKahoot = participants.find(
+                    (participant) => participant.userData?.isKahootHost
+                );
+
+                const participantID = participantRunningKahoot?.session_id;
+                const isLocalParticipantRunningTheGame =
+                    participantID === localParticipant.session_id;
+                if (!isLocalParticipantRunningTheGame) {
+                    disableKahootHostIntegration(callFrame);
+                }
+            }
+        })
 
     return callFrame;
 }
@@ -118,6 +136,15 @@ function enableKahootHostIntegration(callFrame) {
             tooltip: "Start Kahoot Game",
         },
     });
+}
+
+function disableKahootHostIntegration(callFrame) {
+    const integrations = callFrame.customIntegrations();
+    delete integrations.kahootHost;
+    callFrame.setCustomIntegrations(integrations);
+    const buttons = callFrame.customTrayButtons();
+    delete buttons.kahootHost;
+    callFrame.updateCustomTrayButtons(buttons);
 }
 
 function updateKahootHostButton(callFrame, enableStart) {
