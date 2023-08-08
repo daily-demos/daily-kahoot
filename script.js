@@ -60,6 +60,13 @@ function configureCallFrame() {
         .on("left-meeting", () => {
             leaveCall(callFrame);
         })
+        .on("custom-button-click", (e) => {
+            if (e.button_id === "kahootHost") {
+                callFrame.startCustomIntegrations(["kahootHost"]);
+                updateGameHostState(callFrame, true);
+                updateKahootHostButton(callFrame, false);
+            }
+        })
 
     return callFrame;
 }
@@ -97,5 +104,24 @@ function enableKahootHostIntegration(callFrame) {
             label: "Start Kahoot Game",
             tooltip: "Start Kahoot Game",
         },
+    });
+}
+
+function updateKahootHostButton(callFrame, enableStart) {
+    const buttons = callFrame.customTrayButtons();
+    if (enableStart) {
+        buttons.kahootHost.label = "Start Kahoot Game";
+        buttons.kahootHost.tooltip = "Start Kahoot Game";
+    } else {
+        buttons.kahootHost.label = "Exit Kahoot";
+        buttons.kahootHost.tooltip = "Exit Kahoot";
+    }
+    callFrame.updateCustomTrayButtons(buttons);
+}
+
+
+function updateGameHostState(callFrame, isStartingGame) {
+    callFrame.setUserData({
+        isKahootHost: isStartingGame,
     });
 }
