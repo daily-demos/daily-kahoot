@@ -81,7 +81,7 @@ function configureCallFrame() {
         const participant = e.participant;
         const isHost = !!participant.userData?.isKahootHost;
         console.log("participant left:", participant, isHost)
-        // If the participant who just left is a current host,
+        // If the participant who just left is the current host,
         // end the game and let someone else start a new one.
         if (isHost) {
           updateIntegrations(callFrame, Integration.Host)
@@ -102,7 +102,7 @@ function configureCallFrame() {
         }
 
         // If the game has just been stopped, disable the join
-        // integration and enable the kahoot host integration.
+        // integration and enable the Kahoot host integration.
         updateIntegrations(callFrame, Integration.Host)
       })
       .on('participant-joined', (e) => {
@@ -177,12 +177,19 @@ function getCurrentKahootHost(callFrame) {
   return undefined;
 }
 
+/**
+ * Enables the specified integrations (either Kahoot Host or Player),
+ * and disables the other one
+ * @param callFrame
+ * @param integration
+ */
 function updateIntegrations(callFrame, integration) {
   console.log("integration", integration)
   const integrations = callFrame.customIntegrations();
 
   switch (integration) {
     case Integration.Host:
+      // Delete the Player integration and create a Host integration
       delete integrations[Integration.Player];
       const hostIntegration = {
         controlledBy: [],
@@ -193,16 +200,18 @@ function updateIntegrations(callFrame, integration) {
         sandbox: 'allow-same-origin allow-scripts allow-forms allow-popups',
       };
       integrations[Integration.Host] = hostIntegration;
+      // Create a custom button for the Host to start a new game
       callFrame.updateCustomTrayButtons({
         kahootHost: {
           iconPath:
-              'https://cdn.glitch.global/37a36d43-2f57-4d0f-942b-c355917cd97c/kahootIcon.png?v=1687582184705',
+              `${window.location.origin}/kahootIcon.png`,
           label: 'Start Kahoot Game',
           tooltip: 'Start Kahoot Game',
         },
       });
       break;
     case Integration.Player:
+      // Delete the Host integration and create a Player integration
       delete integrations[Integration.Host];
       const url = 'https://kahoot.it';
       const playerIntegration = {
@@ -220,7 +229,7 @@ function updateIntegrations(callFrame, integration) {
   }
   callFrame.setCustomIntegrations(integrations);
   if (integration === Integration.Player) {
-  //  callFrame.startCustomIntegrations([Integration.Player]);
+    callFrame.startCustomIntegrations([Integration.Player]);
   }
 }
 
