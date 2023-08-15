@@ -1,12 +1,12 @@
-const roomURL = 'https://lizashul.daily.co/hello';
+const roomURL = 'DAILY_ROOM_URL';
 const kahootQuizURL =
-    'https://play.kahoot.it/v2/?quizId=c990a754-237c-4d1a-bfe5-c580895d7f5f';
+  'https://play.kahoot.it/v2/?quizId=c990a754-237c-4d1a-bfe5-c580895d7f5f';
 const hideClassName = 'hidden';
 
 const Integration = {
-  Host: "kahootHost",
-  Player: "kahootPlayer"
-}
+  Host: 'kahootHost',
+  Player: 'kahootPlayer',
+};
 
 window.addEventListener('DOMContentLoaded', () => {
   // Set up the join button as soon as the DOM loads.
@@ -42,77 +42,81 @@ function configureCallFrame() {
   });
 
   callFrame
-      .on('joined-meeting', () => {
-        // Enable the host integration by default
-        // We'll disable it if someone else is already hosting
+    .on('joined-meeting', () => {
+      // Enable the host integration by default
+      // We'll disable it if someone else is already hosting
+      updateIntegrations(callFrame, Integration.Host);
+    })
+    .on('left-meeting', () => {
+      leaveCall(callFrame);
+    })
+    .on('custom-button-click', (e) => {
+      const localParticipant = callFrame.participants().local;
+      // If the button clicked is not the Kahoot host button, we have
+      // nothing more to do - early out.
+      if (e.button_id !== Integration.Host) return;
+
+      // Get the current Kahoot host's ID, if any
+      const currentKahootHost = getCurrentKahootHost(callFrame);
+
+      // If there is no current Kahoot host, a game is not running.
+      // Therefore, the local participant's button click starts a new game.
+      if (!currentKahootHost) {
+        console.log('starting kahoot host integration');
+        callFrame.startCustomIntegrations([Integration.Host]);
+        updateGameHostState(callFrame, true);
+        updateKahootHostButton(callFrame, false);
+      }
+      console.log(
+        'current kahoot host:',
+        currentKahootHost,
+        localParticipant.session_id,
+      );
+
+      // If there is an ongoing game and the local player is the host,
+      // the button click stops the game.
+      if (currentKahootHost === localParticipant.session_id) {
+        callFrame.stopCustomIntegrations([Integration.Host]);
+        updateKahootHostButton(callFrame, true);
+        updateGameHostState(callFrame, false);
+      }
+    })
+    .on('participant-left', (e) => {
+      const { participant } = e;
+      const isHost = !!participant.userData?.isKahootHost;
+      console.log('participant left:', participant, isHost);
+      // If the participant who just left is the current host,
+      // end the game and let someone else start a new one.
+      if (isHost) {
         updateIntegrations(callFrame, Integration.Host);
-      })
-      .on('left-meeting', () => {
-        leaveCall(callFrame);
-      })
-      .on('custom-button-click', (e) => {
-        const localParticipant = callFrame.participants().local;
-        // If the button clicked is not the Kahoot host button, we have
-        // nothing more to do - early out.
-        if (e.button_id !== Integration.Host) return;
+      }
+    })
+    .on('app-message', (e) => {
+      const { data } = e;
 
-        // Get the current Kahoot host's ID, if any
-        const currentKahootHost = getCurrentKahootHost(callFrame);
+      // If the isGameStarted property is not the one being updated,
+      // there's nothing further to do. Early out.
+      if (data.isGameStarted === undefined) return;
+      const isStarted = !!data.isGameStarted;
 
-        // If there is no current Kahoot host, a game is not running.
-        // Therefore, the local participant's button click starts a new game.
-        if (!currentKahootHost) {
-          console.log("starting kahoot host integration")
-          callFrame.startCustomIntegrations([Integration.Host]);
-          updateGameHostState(callFrame, true);
-          updateKahootHostButton(callFrame, false);
-        }
-        console.log("current kahoot host:", currentKahootHost, localParticipant.session_id)
+      // If the game has just been started, enable the join integration
+      if (isStarted) {
+        updateIntegrations(callFrame, Integration.Player);
+        return;
+      }
 
-        // If there is an ongoing game and the local player is the host,
-        // the button click stops the game.
-        if (currentKahootHost === localParticipant.session_id) {
-          callFrame.stopCustomIntegrations([Integration.Host]);
-          updateKahootHostButton(callFrame, true);
-          updateGameHostState(callFrame, false);
-        }
-      })
-      .on('participant-left', (e) => {
-        const participant = e.participant;
-        const isHost = !!participant.userData?.isKahootHost;
-        console.log("participant left:", participant, isHost)
-        // If the participant who just left is the current host,
-        // end the game and let someone else start a new one.
-        if (isHost) {
-          updateIntegrations(callFrame, Integration.Host)
-        }
-      })
-      .on('app-message', (e) => {
-        const { data } = e;
-
-        // If the isGameStarted property is not the one being updated,
-        // there's nothing further to do. Early out.
-        if (data.isGameStarted === undefined) return;
-        const isStarted = !!data.isGameStarted;
-
-        // If the game has just been started, enable the join integration
-        if (isStarted) {
-          updateIntegrations(callFrame, Integration.Player)
-          return;
-        }
-
-        // If the game has just been stopped, disable the join
-        // integration and enable the Kahoot host integration.
-        updateIntegrations(callFrame, Integration.Host)
-      })
-      .on('participant-joined', (e) => {
-        // If this player is a current Kahoot host, disable
-        // the local host integration and enable the player integration.
-        const isHost = !!e.participant.userData?.isKahootHost;
-        if (isHost) {
-          updateIntegrations(callFrame, Integration.Player)
-        }
-      });
+      // If the game has just been stopped, disable the join
+      // integration and enable the Kahoot host integration.
+      updateIntegrations(callFrame, Integration.Host);
+    })
+    .on('participant-joined', (e) => {
+      // If this player is a current Kahoot host, disable
+      // the local host integration and enable the player integration.
+      const isHost = !!e.participant.userData?.isKahootHost;
+      if (isHost) {
+        updateIntegrations(callFrame, Integration.Player);
+      }
+    });
 
   return callFrame;
 }
@@ -170,7 +174,7 @@ function getCurrentKahootHost(callFrame) {
   const participants = Object.values(allParticipants);
   for (let i = 0; i < participants.length; i += 1) {
     const p = participants[i];
-    if (!!p.userData?.isKahootHost) {
+    if (p.userData?.isKahootHost) {
       return p.session_id;
     }
   }
@@ -184,11 +188,11 @@ function getCurrentKahootHost(callFrame) {
  * @param integration
  */
 function updateIntegrations(callFrame, integration) {
-  console.log("integration", integration)
+  console.log('integration', integration);
   const integrations = callFrame.customIntegrations();
 
   switch (integration) {
-    case Integration.Host:
+    case Integration.Host: {
       // Delete the Player integration and create a Host integration
       delete integrations[Integration.Player];
       const hostIntegration = {
@@ -203,14 +207,14 @@ function updateIntegrations(callFrame, integration) {
       // Create a custom button for the Host to start a new game
       callFrame.updateCustomTrayButtons({
         kahootHost: {
-          iconPath:
-              `${window.location.origin}/kahootIcon.png`,
+          iconPath: `${window.location.origin}/kahootIcon.png`,
           label: 'Start Kahoot Game',
           tooltip: 'Start Kahoot Game',
         },
       });
       break;
-    case Integration.Player:
+    }
+    case Integration.Player: {
       // Delete the Host integration and create a Player integration
       delete integrations[Integration.Host];
       const url = 'https://kahoot.it';
@@ -223,8 +227,9 @@ function updateIntegrations(callFrame, integration) {
       };
       integrations[Integration.Player] = playerIntegration;
       break;
+    }
     default:
-      console.error("Unsupported integration requested: ", integration);
+      console.error('Unsupported integration requested: ', integration);
       return;
   }
   callFrame.setCustomIntegrations(integrations);

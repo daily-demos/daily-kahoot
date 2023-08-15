@@ -1,7 +1,7 @@
 {
   "name": "daily-kahoot",
   "version": "1.0.0",
-  "description": "A demo showing how to display meeting attendance before joining a Daily room",
+  "description": "A demo showing how to integrate a game of Kahoot into Daily Prebuilt",
   "main": "index.js",
   "scripts": {
     "start": "http-server ./src/ -c-1",
