@@ -45,7 +45,7 @@ function configureCallFrame() {
     .on('joined-meeting', () => {
       // Enable the host integration by default
       // We'll disable it if someone else is already hosting
-      updateIntegrations(callFrame, Integration.Host);
+      toggleIntegrations(callFrame, Integration.Host);
     })
     .on('left-meeting', () => {
       leaveCall(callFrame);
@@ -62,7 +62,6 @@ function configureCallFrame() {
       // If there is no current Kahoot host, a game is not running.
       // Therefore, the local participant's button click starts a new game.
       if (!currentKahootHost) {
-        console.log('starting kahoot host integration');
         callFrame.startCustomIntegrations([Integration.Host]);
         updateGameHostState(callFrame, true);
         updateKahootHostButton(callFrame, false);
@@ -84,37 +83,37 @@ function configureCallFrame() {
     .on('participant-left', (e) => {
       const { participant } = e;
       const isHost = !!participant.userData?.isKahootHost;
-      console.log('participant left:', participant, isHost);
       // If the participant who just left is the current host,
       // end the game and let someone else start a new one.
       if (isHost) {
-        updateIntegrations(callFrame, Integration.Host);
+        toggleIntegrations(callFrame, Integration.Host);
       }
     })
     .on('app-message', (e) => {
       const { data } = e;
-
       // If the isGameStarted property is not the one being updated,
       // there's nothing further to do. Early out.
       if (data.isGameStarted === undefined) return;
+
+      // Otherwise, check if isGameStarted is being set to true or false
       const isStarted = !!data.isGameStarted;
 
       // If the game has just been started, enable the join integration
       if (isStarted) {
-        updateIntegrations(callFrame, Integration.Player);
+        toggleIntegrations(callFrame, Integration.Player);
         return;
       }
 
       // If the game has just been stopped, disable the join
       // integration and enable the Kahoot host integration.
-      updateIntegrations(callFrame, Integration.Host);
+      toggleIntegrations(callFrame, Integration.Host);
     })
     .on('participant-joined', (e) => {
       // If this player is a current Kahoot host, disable
       // the local host integration and enable the player integration.
       const isHost = !!e.participant.userData?.isKahootHost;
       if (isHost) {
-        updateIntegrations(callFrame, Integration.Player);
+        toggleIntegrations(callFrame, Integration.Player);
       }
     });
 
@@ -187,55 +186,97 @@ function getCurrentKahootHost(callFrame) {
  * @param callFrame
  * @param integration
  */
-function updateIntegrations(callFrame, integration) {
-  console.log('integration', integration);
+function toggleIntegrations(callFrame, integration) {
+  console.log('toggling integration', integration);
   const integrations = callFrame.customIntegrations();
 
   switch (integration) {
     case Integration.Host: {
       // Delete the Player integration and create a Host integration
-      delete integrations[Integration.Player];
-      const hostIntegration = {
-        controlledBy: [],
-        location: 'main',
-        shared: true,
-        src: kahootQuizURL,
-        label: 'Kahoot Host',
-        sandbox: 'allow-same-origin allow-scripts allow-forms allow-popups',
-      };
-      integrations[Integration.Host] = hostIntegration;
-      // Create a custom button for the Host to start a new game
-      callFrame.updateCustomTrayButtons({
-        kahootHost: {
-          iconPath: `${window.location.origin}/kahootIcon.png`,
-          label: 'Start Kahoot Game',
-          tooltip: 'Start Kahoot Game',
-        },
-      });
+      removePlayerIntegration(integrations);
+      addHostIntegration(integrations, callFrame);
       break;
     }
     case Integration.Player: {
-      // Delete the Host integration and create a Player integration
-      delete integrations[Integration.Host];
-      const url = 'https://kahoot.it';
-      const playerIntegration = {
-        location: 'main',
-        shared: false,
-        src: url,
-        label: 'Play Kahoot',
-        sandbox: 'allow-same-origin allow-scripts allow-forms',
-      };
-      integrations[Integration.Player] = playerIntegration;
+      // Delete theHost integration and create a Player integration
+      removeHostIntegration(integrations, callFrame);
+      addPlayerIntegration(integrations);
       break;
     }
     default:
       console.error('Unsupported integration requested: ', integration);
       return;
   }
+  // Now that all the integrations are constructed to the given mode (host or player),
+  // Have the call frame actually update its integrations as needed.
   callFrame.setCustomIntegrations(integrations);
   if (integration === Integration.Player) {
+    // If the player integration is being activated, also start it.
     callFrame.startCustomIntegrations([Integration.Player]);
   }
+}
+
+/**
+ * Adds the player integration to the given integrations object
+ * @param integrations
+ */
+function addPlayerIntegration(integrations) {
+  const url = 'https://kahoot.it';
+  const playerIntegration = {
+    location: 'main',
+    shared: false,
+    src: url,
+    label: 'Play Kahoot',
+    sandbox: 'allow-same-origin allow-scripts allow-forms',
+  };
+  integrations[Integration.Player] = playerIntegration;
+}
+
+/**
+ * Removes the player integration from the given integrations object
+ * @param integrations
+ */
+function removePlayerIntegration(integrations) {
+  delete integrations[Integration.Player];
+}
+
+/**
+ * Removes the Kahoot host integration from the given integrations object
+ * and removes the Kahoot host button from custom buttons
+ * @param integrations
+ * @param callFrame
+ */
+function removeHostIntegration(integrations, callFrame) {
+  delete integrations[Integration.Host];
+  const buttons = callFrame.customTrayButtons();
+  delete buttons.kahootHost;
+  callFrame.updateCustomTrayButtons(buttons);
+}
+
+/**
+ * Adds the Kahoot Host integration to the given integrations object
+ * and adds the Kahoot host button to custom buttons
+ * @param integrations
+ * @param callFrame
+ */
+function addHostIntegration(integrations, callFrame) {
+  const hostIntegration = {
+    controlledBy: [],
+    location: 'main',
+    shared: true,
+    src: kahootQuizURL,
+    label: 'Kahoot Host',
+    sandbox: 'allow-same-origin allow-scripts allow-forms allow-popups',
+  };
+  integrations[Integration.Host] = hostIntegration;
+  // Create a custom button for the Host to start a new game
+  callFrame.updateCustomTrayButtons({
+    kahootHost: {
+      iconPath: `${window.location.origin}/kahootIcon.png`,
+      label: 'Start Kahoot Game',
+      tooltip: 'Start Kahoot Game',
+    },
+  });
 }
 
 /**

@@ -19,6 +19,7 @@
       "error",
       { "functions": false }
     ],
-    "import/extensions": "off"
+    "import/extensions": "off",
+    "no-param-reassign": ["error", { "props": false }] 
   }
 }
