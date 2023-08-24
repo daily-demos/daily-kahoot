@@ -1,4 +1,4 @@
-const roomURL = 'https://lizashul.daily.co/hello';
+const roomURL = 'DAILY_ROOM_URL';
 const kahootQuizURL =
   'https://play.kahoot.it/v2/?quizId=c990a754-237c-4d1a-bfe5-c580895d7f5f';
 const hideClassName = 'hidden';
