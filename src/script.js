@@ -241,25 +241,12 @@ function removePlayerIntegration(integrations) {
 }
 
 /**
- * Removes the Kahoot host integration from the given integrations object
- * and removes the Kahoot host button from custom buttons
- * @param integrations
- * @param callFrame
- */
-function removeHostIntegration(integrations, callFrame) {
-  delete integrations[Integration.Host];
-  const buttons = callFrame.customTrayButtons();
-  delete buttons.kahootHost;
-  callFrame.updateCustomTrayButtons(buttons);
-}
-
-/**
  * Adds the Kahoot Host integration to the given integrations object
  * and adds the Kahoot host button to custom buttons
  * @param integrations
  * @param callFrame
  */
-function addHostIntegration(integrations, callFrame) {
+ function addHostIntegration(integrations, callFrame) {
   const hostIntegration = {
     controlledBy: [],
     location: 'main',
@@ -277,6 +264,19 @@ function addHostIntegration(integrations, callFrame) {
       tooltip: 'Start Kahoot Game',
     },
   });
+}
+
+/**
+ * Removes the Kahoot host integration from the given integrations object
+ * and removes the Kahoot host button from custom buttons
+ * @param integrations
+ * @param callFrame
+ */
+function removeHostIntegration(integrations, callFrame) {
+  delete integrations[Integration.Host];
+  const buttons = callFrame.customTrayButtons();
+  delete buttons.kahootHost;
+  callFrame.updateCustomTrayButtons(buttons);
 }
 
 /**
