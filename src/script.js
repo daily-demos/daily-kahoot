@@ -1,4 +1,4 @@
-const roomURL = 'DAILY_ROOM_URL';
+const roomURL = 'https://lizashul.daily.co/hello';
 const kahootQuizURL =
   'https://play.kahoot.it/v2/?quizId=c990a754-237c-4d1a-bfe5-c580895d7f5f';
 const hideClassName = 'hidden';
@@ -189,17 +189,17 @@ function getCurrentKahootHost(callFrame) {
 function toggleIntegrations(callFrame, integration) {
   console.log('toggling integration', integration);
   const integrations = callFrame.customIntegrations();
-
+  const customButtons = callFrame.customTrayButtons();
   switch (integration) {
     case Integration.Host: {
       // Delete the Player integration and create a Host integration
       removePlayerIntegration(integrations);
-      addHostIntegration(integrations, callFrame);
+      addHostIntegration(integrations, customButtons);
       break;
     }
     case Integration.Player: {
       // Delete theHost integration and create a Player integration
-      removeHostIntegration(integrations, callFrame);
+      removeHostIntegration(integrations, customButtons);
       addPlayerIntegration(integrations);
       break;
     }
@@ -210,6 +210,7 @@ function toggleIntegrations(callFrame, integration) {
   // Now that all the integrations are constructed to the given mode (host or player),
   // Have the call frame actually update its integrations as needed.
   callFrame.setCustomIntegrations(integrations);
+  callFrame.updateCustomTrayButtons(customButtons);
   if (integration === Integration.Player) {
     // If the player integration is being activated, also start it.
     callFrame.startCustomIntegrations([Integration.Player]);
@@ -246,7 +247,7 @@ function removePlayerIntegration(integrations) {
  * @param integrations
  * @param callFrame
  */
- function addHostIntegration(integrations, callFrame) {
+function addHostIntegration(integrations, customButtons) {
   const hostIntegration = {
     controlledBy: [],
     location: 'main',
@@ -256,14 +257,13 @@ function removePlayerIntegration(integrations) {
     sandbox: 'allow-same-origin allow-scripts allow-forms allow-popups',
   };
   integrations[Integration.Host] = hostIntegration;
+
   // Create a custom button for the Host to start a new game
-  callFrame.updateCustomTrayButtons({
-    kahootHost: {
-      iconPath: `${window.location.origin}/kahootIcon.png`,
-      label: 'Start Kahoot Game',
-      tooltip: 'Start Kahoot Game',
-    },
-  });
+  customButtons[Integration.Host] = {
+    iconPath: `${window.location.origin}/kahootIcon.png`,
+    label: 'Start Kahoot Game',
+    tooltip: 'Start Kahoot Game',
+  };
 }
 
 /**
@@ -272,11 +272,9 @@ function removePlayerIntegration(integrations) {
  * @param integrations
  * @param callFrame
  */
-function removeHostIntegration(integrations, callFrame) {
+function removeHostIntegration(integrations, customButtons) {
   delete integrations[Integration.Host];
-  const buttons = callFrame.customTrayButtons();
-  delete buttons.kahootHost;
-  callFrame.updateCustomTrayButtons(buttons);
+  delete customButtons[Integration.Host];
 }
 
 /**
