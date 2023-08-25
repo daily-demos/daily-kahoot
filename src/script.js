@@ -26,8 +26,8 @@ window.addEventListener('DOMContentLoaded', () => {
  * @returns {*}
  */
 function configureCallFrame() {
-  const widget = document.getElementById('widget');
-  const callFrame = window.DailyIframe.createFrame(widget, {
+  const callWidget = document.getElementById('callWidget');
+  const callFrame = window.DailyIframe.createFrame(callWidget, {
     iframeStyle: {
       height: 'auto',
       width: '100%',
@@ -66,11 +66,6 @@ function configureCallFrame() {
         updateGameHostState(callFrame, true);
         updateKahootHostButton(callFrame, false);
       }
-      console.log(
-        'current kahoot host:',
-        currentKahootHost,
-        localParticipant.session_id,
-      );
 
       // If there is an ongoing game and the local player is the host,
       // the button click stops the game.
@@ -187,7 +182,6 @@ function getCurrentKahootHost(callFrame) {
  * @param integration
  */
 function toggleIntegrations(callFrame, integration) {
-  console.log('toggling integration', integration);
   const integrations = callFrame.customIntegrations();
   const customButtons = callFrame.customTrayButtons();
   switch (integration) {
@@ -291,7 +285,7 @@ function updateWelcomeScreenVisibility(isVisible) {
 }
 
 /**
- * Turns widget container visibility on or off
+ * Turns call widget container visibility on or off
  * @param isVisible
  */
 function updateCallContainerVisibility(isVisible) {
